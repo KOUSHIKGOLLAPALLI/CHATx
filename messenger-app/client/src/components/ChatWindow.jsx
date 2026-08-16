@@ -12,16 +12,11 @@ function ChatWindow({
 }) {
   const { user } = useAuth();
 
-  /* =====================================================
-     NO CONVERSATION
-  ===================================================== */
-
   if (!conversation) {
     return (
       <div className="chat-window">
         <div className="empty-chat">
           <h2>Your conversations</h2>
-
           <p>
             Select a conversation or search for someone
             to start chatting.
@@ -31,17 +26,7 @@ function ChatWindow({
     );
   }
 
-  /* =====================================================
-     CURRENT USER ID
-  ===================================================== */
-
-  const currentUserId =
-    user?._id ||
-    user?.id;
-
-  /* =====================================================
-     FIND OTHER USER
-  ===================================================== */
+  const currentUserId = user?._id || user?.id;
 
   let otherUser = null;
 
@@ -51,14 +36,9 @@ function ChatWindow({
   ) {
     otherUser = conversation.participants.find(
       (participant) =>
-        String(participant?._id) !==
-        String(currentUserId)
+        String(participant?._id) !== String(currentUserId)
     );
   }
-
-  /* =====================================================
-     FALLBACKS
-  ===================================================== */
 
   if (!otherUser) {
     otherUser =
@@ -72,19 +52,13 @@ function ChatWindow({
     otherUser = {};
   }
 
-  /* =====================================================
-     USER INFORMATION
-  ===================================================== */
-
   const username =
     otherUser.username ||
     otherUser.name ||
     otherUser.displayName ||
     "User";
 
-  const email =
-    otherUser.email ||
-    "";
+  const email = otherUser.email || "";
 
   const profilePicture =
     otherUser.profilePicture ||
@@ -92,18 +66,10 @@ function ChatWindow({
     otherUser.profilePic ||
     "";
 
-  /* =====================================================
-     ONLINE STATUS
-  ===================================================== */
-
   const isOnline =
     otherUser.isOnline === true ||
     otherUser.online === true ||
     otherUser.status === "online";
-
-  /* =====================================================
-     LAST SEEN
-  ===================================================== */
 
   const lastSeen =
     otherUser.lastSeen ||
@@ -116,54 +82,33 @@ function ChatWindow({
 
     const parsedDate = new Date(date);
 
-    if (
-      Number.isNaN(
-        parsedDate.getTime()
-      )
-    ) {
+    if (Number.isNaN(parsedDate.getTime())) {
       return "Offline";
     }
 
     return (
       "last seen " +
-      parsedDate.toLocaleString(
-        [],
-        {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        }
-      )
+      parsedDate.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
     );
   }
-
-  /* =====================================================
-     STATUS
-  ===================================================== */
 
   let statusText;
 
   if (isOnline) {
     statusText = "Online";
   } else if (lastSeen) {
-    statusText =
-      formatLastSeen(lastSeen);
+    statusText = formatLastSeen(lastSeen);
   } else {
-    statusText =
-      email || "Offline";
+    statusText = email || "Offline";
   }
-
-  /* =====================================================
-     RENDER
-  ===================================================== */
 
   return (
     <div className="chat-window">
-
-      {/* =================================================
-          CHAT HEADER
-      ================================================= */}
 
       <div className="chat-header">
 
@@ -179,7 +124,6 @@ function ChatWindow({
 
         {/* PROFILE IMAGE */}
         <div className="avatar">
-
           {profilePicture ? (
             <img
               src={profilePicture}
@@ -187,19 +131,13 @@ function ChatWindow({
               className="chat-avatar-image"
             />
           ) : (
-            username
-              .charAt(0)
-              .toUpperCase()
+            username.charAt(0).toUpperCase()
           )}
-
         </div>
 
         {/* USER DETAILS */}
         <div className="chat-user-info">
-
-          <strong>
-            {username}
-          </strong>
+          <strong>{username}</strong>
 
           <span
             className={
@@ -210,71 +148,41 @@ function ChatWindow({
           >
             {statusText}
           </span>
-
         </div>
 
       </div>
 
-      {/* =================================================
-          MESSAGES
-      ================================================= */}
-
+      {/* MESSAGES */}
       <div className="messages">
 
         {loadingMessages ? (
-
           <div className="empty-chat">
-
-            <h2>
-              Loading messages...
-            </h2>
-
-            <p>
-              Please wait.
-            </p>
-
+            <h2>Loading messages...</h2>
+            <p>Please wait.</p>
           </div>
-
-        ) : messages &&
-          messages.length > 0 ? (
-
-          messages.map(
-            (message, index) => (
-
-              <MessageBubble
-                key={
-                  message._id ||
-                  message.id ||
-                  index
-                }
-                message={message}
-              />
-
-            )
-          )
-
+        ) : messages && messages.length > 0 ? (
+          messages.map((message, index) => (
+            <MessageBubble
+              key={
+                message._id ||
+                message.id ||
+                index
+              }
+              message={message}
+            />
+          ))
         ) : (
-
           <div className="empty-chat">
-
-            <h2>
-              Start a conversation
-            </h2>
-
+            <h2>Start a conversation</h2>
             <p>
               Send a message to {username}.
             </p>
-
           </div>
-
         )}
 
       </div>
 
-      {/* =================================================
-          MESSAGE INPUT
-      ================================================= */}
-
+      {/* MESSAGE INPUT */}
       <MessageInput
         onSend={send}
         onTyping={typingChange}
