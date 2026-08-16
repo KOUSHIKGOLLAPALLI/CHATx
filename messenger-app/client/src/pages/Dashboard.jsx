@@ -628,7 +628,7 @@ function DashboardContent() {
 
   return (
 
-    <div className="app-shell">
+    <div className={`app-shell ${selected ? "chat-selected" : ""}`}>
 
 
       {/* =================================================
