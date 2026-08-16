@@ -8,6 +8,7 @@ function ChatWindow({
   send,
   typingChange,
   loadingMessages = false,
+  onBack,
 }) {
   const { user } = useAuth();
 
@@ -190,16 +191,28 @@ function ChatWindow({
 
   return (
     <div className="chat-window">
+      
 
       {/* =================================================
           CHAT HEADER
       ================================================= */}
 
-      <div className="chat-header">
+      <div className="chat-window">
 
-        {/* PROFILE IMAGE */}
-        <div className="avatar">
+  <div className="chat-header">
 
+    {/* MOBILE BACK BUTTON */}
+    <button
+      type="button"
+      className="mobile-back-button"
+      onClick={onBack}
+      aria-label="Back to chats"
+    >
+      ←
+    </button>
+
+    {/* PROFILE IMAGE */}
+    <div className="avatar">
           {profilePicture ? (
             <img
               src={profilePicture}
