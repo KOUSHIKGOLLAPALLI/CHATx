@@ -31,7 +31,6 @@ function ChatWindow({
     );
   }
 
-
   /* =====================================================
      CURRENT USER ID
   ===================================================== */
@@ -40,42 +39,26 @@ function ChatWindow({
     user?._id ||
     user?.id;
 
-
   /* =====================================================
      FIND OTHER USER
   ===================================================== */
 
   let otherUser = null;
 
-
-  /*
-    Most likely your conversation looks like:
-
-    participants: [
-      currentUser,
-      otherUser
-    ]
-  */
-
   if (
     Array.isArray(conversation.participants) &&
     conversation.participants.length > 0
   ) {
-    otherUser =
-      conversation.participants.find(
-        participant =>
-          String(
-            participant?._id
-          ) !== String(
-            currentUserId
-          )
-      );
+    otherUser = conversation.participants.find(
+      (participant) =>
+        String(participant?._id) !==
+        String(currentUserId)
+    );
   }
 
-
-  /*
-    Fallbacks for different backend formats
-  */
+  /* =====================================================
+     FALLBACKS
+  ===================================================== */
 
   if (!otherUser) {
     otherUser =
@@ -85,15 +68,9 @@ function ChatWindow({
       conversation.receiver;
   }
 
-
-  /*
-    Final fallback
-  */
-
   if (!otherUser) {
     otherUser = {};
   }
-
 
   /* =====================================================
      USER INFORMATION
@@ -105,18 +82,15 @@ function ChatWindow({
     otherUser.displayName ||
     "User";
 
-
   const email =
     otherUser.email ||
     "";
-
 
   const profilePicture =
     otherUser.profilePicture ||
     otherUser.avatar ||
     otherUser.profilePic ||
     "";
-
 
   /* =====================================================
      ONLINE STATUS
@@ -127,7 +101,6 @@ function ChatWindow({
     otherUser.online === true ||
     otherUser.status === "online";
 
-
   /* =====================================================
      LAST SEEN
   ===================================================== */
@@ -136,14 +109,12 @@ function ChatWindow({
     otherUser.lastSeen ||
     otherUser.lastSeenAt;
 
-
   function formatLastSeen(date) {
     if (!date) {
       return "Offline";
     }
 
-    const parsedDate =
-      new Date(date);
+    const parsedDate = new Date(date);
 
     if (
       Number.isNaN(
@@ -167,7 +138,6 @@ function ChatWindow({
     );
   }
 
-
   /* =====================================================
      STATUS
   ===================================================== */
@@ -184,35 +154,32 @@ function ChatWindow({
       email || "Offline";
   }
 
-
   /* =====================================================
      RENDER
   ===================================================== */
 
   return (
     <div className="chat-window">
-      
 
       {/* =================================================
           CHAT HEADER
       ================================================= */}
 
-      <div className="chat-window">
+      <div className="chat-header">
 
-  <div className="chat-header">
+        {/* MOBILE BACK BUTTON */}
+        <button
+          type="button"
+          className="mobile-back-button"
+          onClick={onBack}
+          aria-label="Back to chats"
+        >
+          ←
+        </button>
 
-    {/* MOBILE BACK BUTTON */}
-    <button
-      type="button"
-      className="mobile-back-button"
-      onClick={onBack}
-      aria-label="Back to chats"
-    >
-      ←
-    </button>
+        {/* PROFILE IMAGE */}
+        <div className="avatar">
 
-    {/* PROFILE IMAGE */}
-    <div className="avatar">
           {profilePicture ? (
             <img
               src={profilePicture}
@@ -226,7 +193,6 @@ function ChatWindow({
           )}
 
         </div>
-
 
         {/* USER DETAILS */}
         <div className="chat-user-info">
@@ -248,7 +214,6 @@ function ChatWindow({
         </div>
 
       </div>
-
 
       {/* =================================================
           MESSAGES
@@ -305,7 +270,6 @@ function ChatWindow({
         )}
 
       </div>
-
 
       {/* =================================================
           MESSAGE INPUT
