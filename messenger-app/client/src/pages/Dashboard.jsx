@@ -400,6 +400,7 @@ function DashboardContent() {
                     String(messageId)
                 );
 
+
               if (alreadyExists) {
 
                 return previousMessages;
@@ -521,7 +522,7 @@ function DashboardContent() {
 
   /* =====================================================
      LIVE MESSAGE REFRESH
-     
+
      TEMPORARY SOLUTION
 
      Until Socket.IO is connected properly,
@@ -628,7 +629,11 @@ function DashboardContent() {
 
   return (
 
-    <div className={`app-shell ${selected ? "chat-selected" : ""}`}>
+    <div
+      className={`app-shell ${
+        selected ? "chat-selected" : ""
+      }`}
+    >
 
 
       {/* =================================================
@@ -657,23 +662,24 @@ function DashboardContent() {
           </div>
 
 
-         <div className="header-actions">
+          <div className="header-actions">
 
-    <NotificationBell />
+            <NotificationBell />
 
-    <Link to="/profile">
-        Profile
-    </Link>
+            <Link to="/profile">
+              Profile
+            </Link>
 
-    <button
-        type="button"
-        className="secondary small"
-        onClick={logout}
-    >
-        Logout
-    </button>
+            <button
+              type="button"
+              className="secondary small"
+              onClick={logout}
+            >
+              Logout
+            </button>
 
-</div>
+          </div>
+
         </header>
 
 
@@ -752,6 +758,14 @@ function DashboardContent() {
         loadingMessages={
           loadingMessages
         }
+
+        onBack={() => {
+
+          setSelected(null);
+
+          setMessages([]);
+
+        }}
 
       />
 
