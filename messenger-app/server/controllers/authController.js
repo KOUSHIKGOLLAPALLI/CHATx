@@ -23,6 +23,9 @@ function publicUser(user) {
 export async function register(req, res) {
   try {
     const { username, email, password } = req.body;
+    console.log("REGISTER REQUEST:");
+    console.log("Username received:", username);
+    console.log("Email received:", email);
 
     // Validate fields
     if (!username || !email || !password) {
