@@ -16,14 +16,15 @@ function publicUser(user) {
   };
 }
 
-// ===============================
+// ========================================
 // REGISTER
-// ===============================
+// ========================================
 
 export async function register(req, res) {
   try {
     const { username, email, password } = req.body;
 
+    // Validate fields
     if (!username || !email || !password) {
       return res.status(400).json({
         message: "Username, email and password are required"
@@ -39,94 +40,157 @@ export async function register(req, res) {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedUsername = username.trim();
 
-    // Check if username or email already exists
-    const exists = await User.findOne({
-      $or: [
-        { email: normalizedEmail },
-        { username: normalizedUsername }
-      ]
+    // ========================================
+    // CHECK EMAIL
+    // ========================================
+
+    const emailExists = await User.findOne({
+      email: normalizedEmail
     });
 
-    if (exists) {
+    if (emailExists) {
       return res.status(409).json({
-        message: "Username or email already exists"
+        message: "Email already exists"
       });
     }
 
-    // Generate 6-digit verification code
+    // ========================================
+    // CHECK USERNAME
+    // ========================================
+
+    const usernameExists = await User.findOne({
+      username: normalizedUsername
+    });
+
+    if (usernameExists) {
+      return res.status(409).json({
+        message: "Username already exists"
+      });
+    }
+
+    // ========================================
+    // GENERATE OTP
+    // ========================================
+
     const verificationCode = generateVerificationCode();
 
-    // Hash password
+    // OTP expires after 10 minutes
+    const verificationCodeExpires = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
+
+    // ========================================
+    // HASH PASSWORD
+    // ========================================
+
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // ========================================
+    // CREATE USER
+    // ========================================
+
     const user = await User.create({
       username: normalizedUsername,
       email: normalizedEmail,
       password: passwordHash,
+
+      isVerified: false,
+
       verificationCode,
-      verificationCodeExpires: new Date(
-        Date.now() + 10 * 60 * 1000
-      )
+      verificationCodeExpires
     });
 
-    // Send OTP to user's email
-    await sendEmail(
-      user.email,
-      "ChatX - Email Verification",
-      `
-        <div style="
-          font-family: Arial, sans-serif;
-          max-width: 600px;
-          margin: auto;
-          padding: 30px;
-          border: 1px solid #ddd;
-          border-radius: 10px;
-        ">
+    // ========================================
+    // SEND OTP EMAIL
+    // ========================================
 
-          <h2 style="text-align: center;">
-            Welcome to ChatX
-          </h2>
-
-          <p>Hello <strong>${user.username}</strong>,</p>
-
-          <p>
-            Thank you for registering with ChatX.
-            Please use the verification code below
-            to verify your email address.
-          </p>
-
+    try {
+      await sendEmail(
+        user.email,
+        "ChatX - Email Verification",
+        `
           <div style="
-            text-align: center;
-            margin: 30px 0;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #ffffff;
           ">
-            <span style="
-              font-size: 32px;
-              font-weight: bold;
-              letter-spacing: 8px;
+
+            <h2 style="
+              text-align: center;
+              color: #333;
             ">
-              ${verificationCode}
-            </span>
+              Welcome to ChatX
+            </h2>
+
+            <p>
+              Hello <strong>${user.username}</strong>,
+            </p>
+
+            <p>
+              Thank you for creating your ChatX account.
+              Please use the verification code below
+              to verify your email address.
+            </p>
+
+            <div style="
+              text-align: center;
+              margin: 30px 0;
+            ">
+              <span style="
+                display: inline-block;
+                font-size: 32px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                padding: 15px 25px;
+                background-color: #f2f2f2;
+                border-radius: 8px;
+              ">
+                ${verificationCode}
+              </span>
+            </div>
+
+            <p>
+              This verification code will expire in
+              <strong>10 minutes</strong>.
+            </p>
+
+            <p>
+              Do not share this code with anyone.
+            </p>
+
+            <p>
+              If you did not create this account,
+              you can safely ignore this email.
+            </p>
+
+            <br>
+
+            <p>
+              Thanks,<br>
+              <strong>ChatX Team</strong>
+            </p>
+
           </div>
+        `
+      );
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
 
-          <p>
-            This verification code will expire in
-            <strong>10 minutes</strong>.
-          </p>
+      // Remove the user if email could not be sent
+      await User.findByIdAndDelete(user._id);
 
-          <p>
-            If you did not create a ChatX account,
-            you can safely ignore this email.
-          </p>
+      return res.status(500).json({
+        message: "Unable to send verification email. Please try again."
+      });
+    }
 
-          <p>
-            Thanks,<br>
-            <strong>ChatX Team</strong>
-          </p>
-
-        </div>
-      `
-    );
+    // ========================================
+    // SUCCESS RESPONSE
+    // ========================================
 
     return res.status(201).json({
       message: "Registration successful. Verification code sent to your email.",
@@ -144,9 +208,9 @@ export async function register(req, res) {
 }
 
 
-// ===============================
+// ========================================
 // VERIFY ACCOUNT
-// ===============================
+// ========================================
 
 export async function verifyAccount(req, res) {
   try {
@@ -158,8 +222,10 @@ export async function verifyAccount(req, res) {
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     const user = await User.findOne({
-      email: email.trim().toLowerCase()
+      email: normalizedEmail
     }).select(
       "+verificationCode +verificationCodeExpires"
     );
@@ -171,49 +237,63 @@ export async function verifyAccount(req, res) {
     }
 
     if (user.isVerified) {
-      return res.json({
+      return res.status(400).json({
         message: "Account is already verified"
       });
     }
 
-    // Check verification code
+    // Check whether OTP exists
+    if (!user.verificationCode) {
+      return res.status(400).json({
+        message: "No verification code found. Please request a new code."
+      });
+    }
+
+    // Check OTP
+    if (user.verificationCode !== code.toString().trim()) {
+      return res.status(400).json({
+        message: "Invalid verification code"
+      });
+    }
+
+    // Check OTP expiry
     if (
-      !user.verificationCode ||
-      user.verificationCode !== code.toString() ||
       !user.verificationCodeExpires ||
       user.verificationCodeExpires < new Date()
     ) {
       return res.status(400).json({
-        message: "Invalid or expired verification code"
+        message: "Verification code has expired"
       });
     }
 
-    // Verify account
+    // ========================================
+    // VERIFY USER
+    // ========================================
+
     user.isVerified = true;
 
-    // Remove OTP after successful verification
     user.verificationCode = undefined;
     user.verificationCodeExpires = undefined;
 
     await user.save();
 
-    return res.json({
-      message: "Account verified successfully"
+    return res.status(200).json({
+      message: "Account verified successfully. You can now login."
     });
 
   } catch (error) {
     console.error("Verification error:", error);
 
     return res.status(500).json({
-      message: "Account verification failed"
+      message: "Account verification failed."
     });
   }
 }
 
 
-// ===============================
+// ========================================
 // LOGIN
-// ===============================
+// ========================================
 
 export async function login(req, res) {
   try {
@@ -225,10 +305,13 @@ export async function login(req, res) {
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     const user = await User.findOne({
-      email: email.trim().toLowerCase()
+      email: normalizedEmail
     }).select("+password");
 
+    // Check user and password
     if (
       !user ||
       !(await comparePassword(password, user.password))
@@ -238,19 +321,26 @@ export async function login(req, res) {
       });
     }
 
-    // Don't allow unverified users to login
+    // ========================================
+    // CHECK EMAIL VERIFICATION
+    // ========================================
+
     if (!user.isVerified) {
       return res.status(403).json({
-        message: "Please verify your account first"
+        message: "Please verify your account before logging in.",
+        isVerified: false
       });
     }
 
-    // Generate JWT
+    // ========================================
+    // GENERATE JWT
+    // ========================================
+
     const token = generateToken(
       user._id.toString()
     );
 
-    return res.json({
+    return res.status(200).json({
       token,
       user: publicUser(user)
     });
@@ -259,15 +349,15 @@ export async function login(req, res) {
     console.error("Login error:", error);
 
     return res.status(500).json({
-      message: "Login failed"
+      message: "Login failed."
     });
   }
 }
 
 
-// ===============================
+// ========================================
 // CURRENT USER
-// ===============================
+// ========================================
 
 export async function me(req, res) {
   return res.json({
