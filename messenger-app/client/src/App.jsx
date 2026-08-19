@@ -6,6 +6,7 @@ import VerifyAccount from "./pages/VerifyAccount";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import { useAuth } from "./context/AuthContext";
+import VerifyOTP from "./pages/VerifyOTP";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
